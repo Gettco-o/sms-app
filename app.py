@@ -1,12 +1,12 @@
 from flask import Flask, render_template, url_for
-from models import db, User
+from models import db, User, Wallet, Sms, Transaction
 from flask_migrate import Migrate
 from flask_login import LoginManager
 from flask_login import login_required, current_user
 from auth import mail
 from flask_cors import CORS
 
-from monnify import get_balance, get_wallet
+from monnify import get_balance, get_wallet, webhook
 
 app = Flask(__name__, template_folder='./templates/', static_folder='./static/')
 
@@ -31,6 +31,9 @@ app.register_blueprint(auth_blueprint)
 from sms import get_countries, get_services, sms as sms_blueprint
 app.register_blueprint(sms_blueprint)
 
+from monnify import monnify as monnify_blueprint
+app.register_blueprint(monnify_blueprint)
+
 @app.after_request
 def after_request(response):
     response.headers.add("Access-Control-Allow-Headers", "Content-Type,Authorization,true")
@@ -52,8 +55,10 @@ def index():
 @app.route("/dashboard")
 @login_required
 def dashboard():
-    wallet = get_balance(current_user.id)
-    balance = wallet.get_json()
+    #wallet = get_balance(current_user.id)
+    #balance = wallet.get_json()
+    wallet = Wallet.query.filter_by(user_email=current_user.email).first()
+    balance = wallet.balance if wallet else 0
     balance = "{:,}".format(balance)
     return render_template('dashboard.html', user = current_user, balance=balance)
 
@@ -80,6 +85,7 @@ def deposit():
     account = account.get_json()
     return render_template('deposit.html', account=account)
 
+
 # run the app
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(host='0.0.0.0', debug=True)

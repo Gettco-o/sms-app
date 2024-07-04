@@ -1,8 +1,12 @@
 import base64
+from decimal import Decimal
 import requests
 import time
-from flask import Blueprint, jsonify, flash
+from flask import Blueprint, jsonify, flash, request
 from flask_login import login_required, current_user
+from models import Wallet, Transaction, db
+import hashlib
+import hmac
 
 monnify = Blueprint('monnify', __name__)
 
@@ -85,3 +89,74 @@ def get_balance(account_reference):
         return jsonify(data)
     except:
         return jsonify('0')
+
+@monnify.route('/webhook', methods=['POST'])
+def webhook():
+    print("launched")
+    ensure_valid_token()
+
+    monnify_signature = request.headers.get('monnify-signature')
+    if not monnify_signature:
+        return jsonify({"status": "error", "message": "Missing monnify-signature header"}), 400
+
+    # Get the raw request body
+    request_body = request.get_data(as_text=True)
+
+    # Compute the hash
+    computed_hash = hmac.new(
+        secret_key.encode(), 
+        request_body.encode(), 
+        hashlib.sha512
+    ).hexdigest()
+
+    # Compare the computed hash with the 'monnify-signature'
+    if computed_hash != monnify_signature:
+        return jsonify({"status": "error", "message": "Invalid signature"}), 400
+
+    #data = request.get_json()
+    data = request.json
+    if data['eventType'] == 'SUCCESSFUL_TRANSACTION':
+        #account_reference = data['eventData']['accountReference']
+        user_email = data['eventData']['customer']['email']
+        created_at = data['eventData']['paidOn']   
+        amount_paid = Decimal(data['eventData']['amountPaid'])
+        transaction_reference = data['eventData']['transactionReference']
+        status = data['eventType']
+
+        wallet = Wallet.query.filter_by(user_email=user_email).first()
+        if wallet:
+            wallet.balance += amount_paid
+        else:
+            wallet = Wallet(user_email=user_email, balance=amount_paid)
+            db.session.add(wallet)
+
+        initTrans = Transaction.query.filter_by(transaction_reference=transaction_reference).first()
+        if initTrans:
+            return jsonify({"status": "error", "message": "Transaction already exists"}), 400
+        
+        transaction = Transaction(user_email=user_email, amount=amount_paid, created_at=created_at, 
+                                  transaction_reference=transaction_reference, 
+                                  transaction_type='deposit', status=status)
+        db.session.add(transaction)
+        db.session.commit()
+
+        print(f"Updated wallet for {user_email}: {wallet.balance}")
+    
+    return jsonify({"status": "success"}), 200
+
+@monnify.route('/purchase', methods=['POST'])
+def purchase():
+    data = request.json
+    user_email = data['eventData']['customer']['email']
+    purchase_amount = Decimal(data['purchase_amount'])
+
+    wallet = Wallet.query.filter_by(user_email=user_email).first()
+    if not wallet or wallet.balance < purchase_amount:
+        return jsonify({"status": "error", "message": "Insufficient funds"}), 400
+
+    wallet.balance -= purchase_amount
+    transaction = Transaction(user_email=user_email, amount=purchase_amount, transaction_type='purchase')
+    db.session.add(transaction)
+    db.session.commit()
+
+    return jsonify({"status": "success", "remaining_balance": wallet.balance}), 200
