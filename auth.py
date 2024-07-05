@@ -151,7 +151,7 @@ def forgot_password():
             token = s.dumps(email, salt='password-reset')
             link = url_for('auth.reset_password', token=token, _external=True)
             print("token, link ", token, link)
-            msg = Message(subject='Password Reset', sender='codeplugng@gmail.com', recipients=[email])
+            msg = Message(subject='Password Reset', sender=os.getenv('MAIL_USERNAME'), recipients=[email])
             msg.body = f'Your link is {link}'
             mail.send(msg)
             print(msg)

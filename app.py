@@ -1,5 +1,5 @@
 from flask import Flask, render_template, url_for
-from models import db, User, Wallet, Sms, Transaction
+from models import db, User, Wallet
 from flask_migrate import Migrate
 from flask_login import LoginManager
 from flask_login import login_required, current_user
@@ -14,30 +14,22 @@ load_dotenv()
 
 app = Flask(__name__, template_folder='./templates/', static_folder='./static/')
 
-app.config.from_object('config')
+#app.config.from_object('config')
 
 basedir = os.path.abspath(os.path.dirname(__file__))
 
 app.config['SECRET_KEY']=os.getenv('SECRET_KEY')
-app.config['DEBUG']=bool(os.getenv('DEBUG'))
+app.config['DEBUG'] = os.getenv('DEBUG').lower() in ['true', '1', 't', 'y', 'yes']
+
 app.config['SQLALCHEMY_DATABASE_URI']=os.getenv('SQLALCHEMY_DATABASE_URI')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS']=os.getenv('SQLALCHEMY_TRACK_MODIFICATIONS')
 
-""" app.config['MAIL_SERVER']=os.getenv('MAIL_SERVER')
+app.config['MAIL_SERVER']=os.getenv('MAIL_SERVER')
 app.config['MAIL_PORT']=int(os.getenv('MAIL_PORT'))
 app.config['MAIL_USERNAME']=os.getenv('MAIL_USERNAME')
 app.config['MAIL_PASSWORD']=os.getenv('MAIL_PASSWORD')
-app.config['MAIL_USE_TLS']=bool(os.getenv('MAIL_USE_TLS'))
-app.config['MAIL_USE_SSL']=bool(os.getenv('MAIL_USE_SSL'))
- """
-
-
-app.config['MAIL_SERVER']='sandbox.smtp.mailtrap.io'
-app.config['MAIL_PORT'] = 2525
-app.config['MAIL_USERNAME'] = 'e29f3da09656bd'
-app.config['MAIL_PASSWORD'] = '5564c6f6da2cb0'
-app.config['MAIL_USE_TLS'] = True
-app.config['MAIL_USE_SSL'] = False
+app.config['MAIL_USE_TLS'] = os.getenv('MAIL_USE_TLS').lower() in ['true', '1', 't', 'y', 'yes']
+app.config['MAIL_USE_SSL'] = os.getenv('MAIL_USE_SSL').lower() in ['true', '1', 't', 'y', 'yes']
 
 
 db.init_app(app)
