@@ -5,12 +5,40 @@ from flask_login import LoginManager
 from flask_login import login_required, current_user
 from auth import mail
 from flask_cors import CORS
+import os
+from dotenv import load_dotenv
 
-from monnify import get_balance, get_wallet, webhook
+from monnify import get_wallet
+
+load_dotenv()
 
 app = Flask(__name__, template_folder='./templates/', static_folder='./static/')
 
 app.config.from_object('config')
+
+basedir = os.path.abspath(os.path.dirname(__file__))
+
+app.config['SECRET_KEY']=os.getenv('SECRET_KEY')
+app.config['DEBUG']=bool(os.getenv('DEBUG'))
+app.config['SQLALCHEMY_DATABASE_URI']=os.getenv('SQLALCHEMY_DATABASE_URI')
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS']=os.getenv('SQLALCHEMY_TRACK_MODIFICATIONS')
+
+""" app.config['MAIL_SERVER']=os.getenv('MAIL_SERVER')
+app.config['MAIL_PORT']=int(os.getenv('MAIL_PORT'))
+app.config['MAIL_USERNAME']=os.getenv('MAIL_USERNAME')
+app.config['MAIL_PASSWORD']=os.getenv('MAIL_PASSWORD')
+app.config['MAIL_USE_TLS']=bool(os.getenv('MAIL_USE_TLS'))
+app.config['MAIL_USE_SSL']=bool(os.getenv('MAIL_USE_SSL'))
+ """
+
+
+app.config['MAIL_SERVER']='sandbox.smtp.mailtrap.io'
+app.config['MAIL_PORT'] = 2525
+app.config['MAIL_USERNAME'] = 'e29f3da09656bd'
+app.config['MAIL_PASSWORD'] = '5564c6f6da2cb0'
+app.config['MAIL_USE_TLS'] = True
+app.config['MAIL_USE_SSL'] = False
+
 
 db.init_app(app)
 
@@ -55,8 +83,6 @@ def index():
 @app.route("/dashboard")
 @login_required
 def dashboard():
-    #wallet = get_balance(current_user.id)
-    #balance = wallet.get_json()
     wallet = Wallet.query.filter_by(user_email=current_user.email).first()
     balance = wallet.balance if wallet else 0
     balance = "{:,}".format(balance)

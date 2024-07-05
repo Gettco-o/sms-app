@@ -1,8 +1,12 @@
 import requests
 from config import SMS_API_KEY
 from flask import Blueprint, jsonify, flash
+import os
+from dotenv import load_dotenv
 
-api_key = SMS_API_KEY
+load_dotenv()
+
+api_key = os.getenv('SMS_API_KEY')
 
 sms = Blueprint('sms', __name__)
 

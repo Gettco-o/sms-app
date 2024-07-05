@@ -3,16 +3,18 @@ from decimal import Decimal
 import requests
 import time
 from flask import Blueprint, jsonify, flash, request
-from flask_login import login_required, current_user
 from models import Wallet, Transaction, db
 import hashlib
 import hmac
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
 
 monnify = Blueprint('monnify', __name__)
 
-base_url = "https://sandbox.monnify.com"
-api_key = "MK_TEST_QD3MYQBZST"
-secret_key = "UTN0TTBN8C8GF1MVEHTUM3UX6ZPBBBE0"
+api_key = os.getenv('MONNIFY_API_KEY')
+secret_key = os.getenv('MONNIFY_SECRET_KEY')
 
 credentials = f"{api_key}:{secret_key}"
 
@@ -22,9 +24,9 @@ headers = {
     'Authorization': f'Basic {encoded_credentials}'
 }
 
-auth_url = 'https://sandbox.monnify.com/api/v1/auth/login'
+auth_url = os.getenv('MONNIFY_AUTH_URL')
 
-base_url = 'https://sandbox.monnify.com'
+base_url = os.getenv('MONNIFY_BASE_URL')
 
 session = requests.Session()
 

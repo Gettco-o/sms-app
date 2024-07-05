@@ -10,12 +10,17 @@ from itsdangerous import SignatureExpired, URLSafeTimedSerializer
 
 from models import User, db
 
-from config import SECRET_KEY
+import os
+from dotenv import load_dotenv
+
+
 from monnify import create_wallet
+
+load_dotenv()
 
 auth = Blueprint('auth', __name__)
 
-secret_key = SECRET_KEY
+secret_key = os.getenv('SECRET_KEY')
 
 
 mail = Mail()
@@ -108,7 +113,7 @@ def verify_email(token):
     else:
         user.email_verified = True
         db.session.commit()
-        create_wallet(user.id, user.fullname, user.email)
+        create_wallet(str(user.id), user.fullname, user.email)
         flash('Your account has been verified!', 'success')
     return redirect(url_for('auth.login'))
 
