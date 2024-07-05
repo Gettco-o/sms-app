@@ -65,7 +65,7 @@ def create_wallet(user_id, user_name, user_email):
         "currencyCode": "NGN",
         "contractCode": "2031554299",
         "customerEmail": user_email,
-        "customerName": "Python Test1",
+        "customerName": user_name,
         "getAllAvailableBanks": True
     }
 
