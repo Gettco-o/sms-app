@@ -1,6 +1,7 @@
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import UserMixin
 import uuid
+from decimal import Decimal
 
 db = SQLAlchemy()
 
@@ -31,13 +32,16 @@ class Transaction(db.Model):
 
 
 class Sms(db.Model):
-    id = db.Column(db.Integer, primary_key=True, default=uuid.uuid4)
+    id = db.Column(db.UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     user_id = db.Column(db.UUID(as_uuid=True), db.ForeignKey(
         'user.id'
     ), nullable=False)
     request_id = db.Column(db.Integer, nullable=False)
     country_id = db.Column(db.Integer, nullable=False)
     application_id = db.Column(db.Integer, nullable=False)
+    amount = db.Column(db.Numeric(10, 2), nullable=False, default=Decimal(75))    
     number = db.Column(db.String(50), nullable=False)
     sms_code = db.Column(db.String(50), nullable=True)
     created_at = db.Column(db.DateTime, default=db.func.current_timestamp())
+
+    

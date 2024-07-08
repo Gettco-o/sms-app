@@ -1,5 +1,6 @@
 import base64
 from decimal import Decimal
+from flask_login import login_required
 import requests
 import time
 from flask import Blueprint, jsonify, flash, request
@@ -146,19 +147,23 @@ def webhook():
     
     return jsonify({"status": "success"}), 200
 
-@monnify.route('/purchase', methods=['POST'])
-def purchase():
-    data = request.json
-    user_email = data['eventData']['customer']['email']
-    purchase_amount = Decimal(data['purchase_amount'])
+#@monnify.route('/purchase', methods=['POST'])
+@login_required
+def purchase(email, purchase_amount):
+    #data = request.json
+    #user_email = data['email']
+    #purchase_amount = Decimal(data['purchase_amount'])
+
+    user_email = email
+    purchase_amount = Decimal(purchase_amount)
 
     wallet = Wallet.query.filter_by(user_email=user_email).first()
     if not wallet or wallet.balance < purchase_amount:
-        return jsonify({"status": "error", "message": "Insufficient funds"}), 400
+        return jsonify({"status": "error", "message": "Insufficient funds"})
 
     wallet.balance -= purchase_amount
-    transaction = Transaction(user_email=user_email, amount=purchase_amount, transaction_type='purchase')
-    db.session.add(transaction)
+    #transaction = Transaction(user_email=user_email, amount=purchase_amount, transaction_type='purchase')
+    #db.session.add(transaction)
     db.session.commit()
 
-    return jsonify({"status": "success", "remaining_balance": wallet.balance}), 200
+    return jsonify({"status": "success", "remaining_balance": wallet.balance})

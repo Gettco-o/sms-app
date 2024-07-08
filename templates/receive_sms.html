@@ -66,22 +66,286 @@
                 <span id="amount" class="font-bold">0</span>
             </div>
         </div>
-        <button class="w-full mt-4 gradient text-white font-bold py-2 px-4 rounded-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 hover:bg-blue-600 transition-all">
+        <div id="spinnerPur" class="w-full mt-4 gradient text-white font-bold py-2 px-4 rounded-lg hidden inset-0 flex items-center justify-center z-50">
+            <div class="loader"></div>
+        </div>
+        <button id="purchase-btn" onclick="purchase_number()" class="w-full mt-4 gradient text-white font-bold py-2 px-4 rounded-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 hover:bg-blue-600 transition-all">
             Purchase
         </button>
     </div>
 
     <!-- Recent Transactions -->
     <div class="bg-white p-6 rounded-lg shadow-lg col-span-1 md:col-span-2 lg:col-span-2 xl:col-span-2">
-      <h2 class="text-2xl font-bold mb-4">Recent Transactions</h2>
-      <ul class="list-disc list-inside">
-        <li>Transaction 1: +$10.00</li>
-        <li>Transaction 2: -$5.00</li>
-        <li>Transaction 3: +$20.00</li>
-        <li>Transaction 4: -$7.00</li>
-        <!-- Add more transactions as needed -->
-      </ul>
+        <h2 class="text-2xl font-bold mb-4">Recent Transactions</h2>
+        <div id="spinner-sms" class="min-w-full my-shadow rounded-sm hidden inset-0 flex items-center justify-center z-50 fixed top-0 left-0 h-full bg-black bg-opacity-50">
+            <div class="loader"></div>
+        </div>
+        <div class="overflow-x-auto">
+            <table class="min-w-full bg-white">
+                <thead>
+                    <tr class="w-full bg-gray-200 text-gray-600 uppercase text-sm leading-normal">
+                        <th class="py-3 px-6 text-left">Request ID</th>
+                        <th class="py-3 px-6 text-left">Country ID</th>
+                        <th class="py-3 px-6 text-left">Application ID</th>
+                        <th class="py-3 px-6 text-left">Amount</th>
+                        <th class="py-3 px-6 text-left">Number</th>
+                        <th class="py-3 px-6 text-left">SMS Code</th>
+                        <th class="py-3 px-6 text-left">Date</th>
+                    </tr>
+                </thead>
+                <tbody id="transaction-body" class="text-gray-600 text-sm font-light">
+                    {% if sms %}
+                    {% for ms in sms%}
+                    <tr class="border-b border-gray-200 hover:bg-gray-100">
+                        <td class="py-3 px-6 text-left">{{ms.request_id}}</td>
+                        <td class="py-3 px-6 text-left">{{ms.country_id}}</td>
+                        <td class="py-3 px-6 text-left">{{ms.application_id}}</td>
+                        <td class="py-3 px-6 text-left">{{ms.amount}}</td>
+                        <td class="py-3 px-6 text-left">{{ms.number}}</td>
+                        {% if ms.sms_code %}
+                        <td id="{{ms.request_id}}" class="py-3 px-6 text-left">{{ms.sms_code}}</td>
+                        {% else %}
+                        <td id="{{ms.request_id}}" class="text-center">
+                            <buttton onclick="get_sms('{{ms.request_id}}')" id="get-sms-btn" class="text-xl underline cursor-pointer">Get Sms</buttton>
+                        </td>
+                        {% endif %}
+                        <td class="py-3 px-6 text-left">{{ms.created_at}}</td>
+                    </tr>
+                    {% endfor %}
+                    {% endif %}
+                    <tr class="border-b border-gray-200 hover:bg-gray-100">
+                        <td class="py-3 px-6 text-left">2</td>
+                        <td class="py-3 px-6 text-left">UK</td>
+                        <td class="py-3 px-6 text-left">App456</td>
+                        <td class="py-3 px-6 text-left">0987654321</td>
+                        <td class="py-3 px-6 text-left">Code2</td>
+                        <td class="py-3 px-6 text-left">2023-07-05</td>
+                    </tr>
+                <!-- Add more rows as needed -->
+                </tbody>
+            </table>
+        </div>
     </div>
+      
+
+
 </div>
+<script>
+    //receive sms
+
+var country_id;
+var application_id;
+var number_cost;
+
+function toggleCountryDropdown() 
+{
+    const countryList = document.getElementById('countryList');
+    countryList.classList.toggle('hidden');
+}
+
+function selectCountry(country, code, id) 
+{
+    const countryDropdown = document.getElementById('countryDropdown');
+    countryDropdown.querySelector('span').innerHTML =` <img src=" ${'https://hatscripts.github.io/circle-flags/flags/' + code.toLowerCase() + '.svg'}" alt="${country}" class="inline-block w-5 h-5 mr-2"
+    onerror="this.onerror=null;this.src='https://hatscripts.github.io/circle-flags/flags/ca.svg';">
+    ${country}`;
+
+    toggleCountryDropdown();
+    country_id = id;
+    console.log(country_id);
+
+    getPrices();
+}
+
+// Close dropdown if clicked outside
+document.addEventListener('click', function(event) 
+{
+    const countryDropdown = document.getElementById('countryDropdown');
+    const countryList = document.getElementById('countryList');
+    if (countryDropdown && countryList)
+    {if (!countryDropdown.contains(event.target) && !countryList.contains(event.target)) {
+      countryList.classList.add('hidden');
+    }}
+});
+
+
+function toggleServiceDropdown() 
+{
+    const serviceList = document.getElementById('serviceList');
+    serviceList.classList.toggle('hidden');
+}
+
+function selectService(service, code, id) 
+{
+    const serviceDropdown = document.getElementById('serviceDropdown');
+    serviceDropdown.querySelector('span').innerHTML =` <img src=" ${'https://imagedelivery.net/cg2aWO7l_BnFQQ6dZHYOSA/services/' + code.toLowerCase() + '.png/thumb'} " alt="${service}" class="inline-block w-5 h-5 mr-2"
+    onerror="this.onerror=null;this.src='https://imagedelivery.net/cg2aWO7l_BnFQQ6dZHYOSA/services/wb.png/thumb';">
+    ${service} `;
+
+    toggleServiceDropdown();
+    application_id = id;
+    console.log(application_id);
+
+    getPrices();
+}
+
+// Close dropdown if clicked outside
+document.addEventListener('click', function(event) 
+{
+    const serviceDropdown = document.getElementById('serviceDropdown');
+    const serviceList = document.getElementById('serviceList');
+    if (serviceDropdown && serviceList)
+    {if (!serviceDropdown.contains(event.target) && !serviceList.contains(event.target)) {
+      serviceList.classList.add('hidden');
+    }}
+});
+
+// get prices
+
+function getPrices()
+{
+    const numberAvailable = document.getElementById('number-available');
+    const amount = document.getElementById('amount');
+    console.log(country_id)
+    console.log(application_id)
+
+    if (country_id && application_id) {
+        showSpinner();
+        fetch(`/get-prices/${application_id}/${country_id}`, {
+            method: 'GET',
+            headers: {
+              'Content-Type': 'application/json'
+            }
+          })
+          .then(response => response.json())
+          .then(data => {
+            numberAvailable.innerText = data.data.count;
+            amount.innerText = data.data.cost;
+            number_cost = data.data.cost;
+            console.log(data);
+            hideSpinner();
+          })
+          .catch(error => {
+            alert("Error: Couldn't fetch data", error);
+            hideSpinner();
+            // document.getElementById('error').className = ''; // uncomment if you want to show an error message
+          });
+    }
+}
+
+function purchase_number() {
+    if (country_id && application_id && number_cost) {
+        document.getElementById('purchase-btn').disabled = true;
+
+        showSpinnerPur();
+        fetch(`/request-number/${application_id}/${country_id}/${number_cost}`, {
+            method: 'GET',
+            headers: {
+              'Content-Type': 'application/json'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            console.log(data);
+            alert(`Number successfully purchased ${data.data.number}`);
+            hideSpinnerPur();
+            document.getElementById('purchase-btn').disabled = false;
+            window.location.reload();
+
+        })
+        
+    }
+}
+
+function get_sms(request_id) {
+    showSpinnerSms();
+    fetch(`/receive-sms/${request_id}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        console.log(data);
+        if (data.error_msg) {
+            hideSpinnerSms();
+            alert(data.error_msg);
+        }
+        else {
+            hideSpinnerSms();
+            alert(`sms is ${data.data.sms_code}`);
+            document.getElementById(`${request_id}`).innerText = data.sms_code;
+        }
+        
+    })
+}
+
+// spinner loader
+
+function showSpinner() {
+    document.getElementById('spinner').classList.remove('hidden');
+    document.getElementById('availability').classList.add('hidden');
+}
+
+function hideSpinner() {
+    document.getElementById('spinner').classList.add('hidden');
+    document.getElementById('availability').classList.remove('hidden');
+}
+
+function showSpinnerSms() {
+    document.getElementById('spinner-sms').classList.remove('hidden');
+    document.getElementById('get-sms-btn').classList.add('hidden');
+}
+
+function hideSpinnerSms() {
+    document.getElementById('spinner-sms').classList.add('hidden');
+    document.getElementById('get-sms-btn').classList.remove('hidden');
+}
+
+function showSpinnerPur() {
+    document.getElementById('spinnerPur').classList.remove('hidden');
+    document.getElementById('purchase-btn').classList.add('hidden');
+}
+
+function hideSpinnerPur() {
+    document.getElementById('spinnerPur').classList.add('hidden');
+    document.getElementById('purchase-btn').classList.remove('hidden');
+}
+//search
+
+function filterServices() {
+    var input = document.getElementById('serviceSearch');
+    var filter = input.value.toLowerCase();
+    var ul = document.getElementById('serviceList');
+    var li = ul.getElementsByClassName('service-item');
+
+    for (var i = 0; i < li.length; i++) {
+        var txtValue = li[i].textContent || li[i].innerText;
+        if (txtValue.toLowerCase().indexOf(filter) > -1) {
+            li[i].style.display = "";
+        } else {
+            li[i].style.display = "none";
+        }
+    }
+}
+
+function filterCountries() {
+    var input = document.getElementById('countrySearch');
+    var filter = input.value.toLowerCase();
+    var ul = document.getElementById('countryList');
+    var li = ul.getElementsByClassName('country-item');
+
+    for (var i = 0; i < li.length; i++) {
+        var txtValue = li[i].textContent || li[i].innerText;
+        if (txtValue.toLowerCase().indexOf(filter) > -1) {
+            li[i].style.display = "";
+        } else {
+            li[i].style.display = "none";
+        }
+    }
+}
+
+</script>
 
 {% endblock %}

@@ -1,7 +1,7 @@
 import os
+import secrets
 
-key = os.urandom(32)
-
+key = new_secret_key = secrets.token_urlsafe(32)
 DEBUG=True
 MAIL_SERVER='sandbox.smtp.mailtrap.io'
 MAIL_PORT=2525

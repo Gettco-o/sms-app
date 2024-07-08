@@ -43,4 +43,29 @@
     </div>    
 </div>
 
+<script>
+  // change password
+
+function change_password() {
+    var npassw = document.getElementById('newpassword');
+    var cnpassw = document.getElementById('cnewpassword');
+
+    console.log(npassw.value)
+    console.log(cnpassw.value)
+    
+
+    if (npassw.value !== cnpassw.value) {
+        btn = document.getElementById('changepassbtn');
+        msg = document.getElementById('changepassalert');
+        msg.classList.remove('hidden')
+    }
+    else {
+        btn.disabled = false;
+        msg.classList.add('hidden')
+    }
+
+}
+
+</script>
+
 {% endblock %}

@@ -1,5 +1,5 @@
-from flask import Flask, render_template, url_for
-from models import db, User, Wallet
+from flask import Flask, render_template
+from models import db, User, Wallet, Sms
 from flask_migrate import Migrate
 from flask_login import LoginManager
 from flask_login import login_required, current_user
@@ -92,9 +92,9 @@ def receive_sms():
     services = get_services()
     data1 = countries.get_json()
     data2 = services.get_json()
-      
 
-    return render_template('receive_sms.html', countries = data1["countries"], services=data2["services"])
+    sms = Sms.query.filter_by(user_id=current_user.id).all()
+    return render_template('receive_sms.html', countries = data1["countries"], services=data2["services"], sms=sms)
 
 @app.route("/deposit")
 @login_required

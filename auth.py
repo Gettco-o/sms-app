@@ -21,11 +21,17 @@ load_dotenv()
 auth = Blueprint('auth', __name__)
 
 secret_key = os.getenv('SECRET_KEY')
-
+try:
+    print("this is secret ", secret_key)
+except:
+    print(sys.exc_info())
+    print("Even print no gree")
 
 mail = Mail()
-
-s = URLSafeTimedSerializer(secret_key)
+try:
+    s = URLSafeTimedSerializer(secret_key)
+except:
+    print(sys.exc_info())
 
 @auth.route("/login")
 def login():
