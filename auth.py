@@ -21,17 +21,10 @@ load_dotenv()
 auth = Blueprint('auth', __name__)
 
 secret_key = os.getenv('SECRET_KEY')
-try:
-    print("this is secret ", secret_key)
-except:
-    print(sys.exc_info())
-    print("Even print no gree")
 
 mail = Mail()
-try:
-    s = URLSafeTimedSerializer(secret_key)
-except:
-    print(sys.exc_info())
+
+s = URLSafeTimedSerializer(secret_key)
 
 @auth.route("/login")
 def login():
@@ -50,7 +43,6 @@ def login_post():
                 flash("Incorrect login details", "danger")
                 return redirect(url_for('login'))
             if user.email_verified:
-                print("Remebr is ", remember)
                 login_user(user, remember=remember)
                 flash('Logged in successfully!', 'success')
                 return redirect(url_for('dashboard'))
@@ -58,7 +50,7 @@ def login_post():
             else:
                 flash('Please verify your email before logging in.', 'danger')
         except:
-            print(sys.exc_info())
+            pass
     return render_template('login.html') 
 
         
@@ -85,12 +77,12 @@ def signup_post():
             
             db.session.add(new_user)
             db.session.commit()
-            print("new_user", new_user)
+
             flash("User sign up succesful", "success")
 
             token = s.dumps(email, salt='email-confirm')
             link = url_for('auth.verify_email', token=token, _external=True)
-            print("token, link ", token, link)
+
             msg = Message(subject='Email Verification', sender='codeplugng@gmail.com', recipients=[email])
             msg.body = f'Your link is {link}'
             mail.send(msg)
@@ -100,7 +92,6 @@ def signup_post():
             return redirect(url_for('auth.login'))
         except:
             flash("error occured", 'danger')
-            print(sys.exc_info())
             db.session.rollback()
     return render_template('signup.html')
 
@@ -156,7 +147,7 @@ def forgot_password():
 
             token = s.dumps(email, salt='password-reset')
             link = url_for('auth.reset_password', token=token, _external=True)
-            print("token, link ", token, link)
+        
             msg = Message(subject='Password Reset', sender=os.getenv('MAIL_USERNAME'), recipients=[email])
             msg.body = f'Your link is {link}'
             mail.send(msg)
@@ -166,7 +157,7 @@ def forgot_password():
             return redirect(url_for('auth.login'))
         except:
             flash("error occured", 'danger')
-            print(sys.exc_info())
+        
             db.session.rollback()
     return render_template('login.html')
     

@@ -14,8 +14,6 @@ api_key = os.getenv('SMS_API_KEY')
 
 sms = Blueprint('sms', __name__)
 
-
-@sms.route("/countries")
 def get_countries():
     url = "https://api.sms-man.com/control/countries?token="
     response = requests.get(url+api_key)
@@ -23,7 +21,6 @@ def get_countries():
     result = response.json()
     try:
         if not result["success"]:
-            print("error occured", result)
             flash("An error occured: ", result["error_code"])
             return jsonify(result)
     except:
@@ -33,12 +30,10 @@ def get_countries():
         })
 
 
-@sms.route("/services")
 def get_services():
     url = "https://api.sms-man.com/control/applications?token="
     response = requests.get(url+api_key)
-    print(response.json)
-
+    
     result = response.json()
 
     try:
@@ -64,8 +59,7 @@ def get_prices(application_id, country_id):
             return jsonify(result)
     except:
         data = filter_data(list(result.values()), application_id, country_id)
-        print("data is ", data)
-
+        
         return jsonify({
             "success": True,
             "data": data
@@ -84,10 +78,8 @@ def request_number(application_id, country_id, amount):
     result = response.json()
     try:
         if not result["success"]:
-            print("Error ", result)
             return jsonify(result)
     except:
-        print(result)
         trans = purchase(current_user.email, amount)
         response = trans.get_json()
         if response['status']=="success":
@@ -103,14 +95,14 @@ def request_number(application_id, country_id, amount):
                         amount=Decimal(amount), number=number)
             db.session.add(new_sms)
             db.session.commit()
-            #flash("Number successfully gotten","success")
+           
             return jsonify({
                 "success": True,
                 "data": result
             })
         else:
             reject_number(result['request_id'])
-            #flash("Transaction failed", "danger")
+           
             return jsonify({
                 "success": False,
                 "data": response
@@ -132,17 +124,12 @@ def get_sms(request_id):
     sms_code = ''
     try:
         if result['error_code']:
-            print("failed result ", result)
-            flash(f"{result['error_msg']}", "info")
             return jsonify(result)
     except:
-        print("success result ", result)
         request_id = result['request_id']
         sms_code = result['sms_code']
         initial_sms = Sms.query.filter_by(request_id=request_id).first()
         if initial_sms:
             initial_sms.sms_code = sms_code
             db.session.commit()
-    flash("SMS received", "success")
-    print(sms_code)
     return jsonify(result)

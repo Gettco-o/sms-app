@@ -26,7 +26,7 @@
                     <li class="country-item px-4 py-2 hover:bg-gray-100 cursor-pointer" onclick="selectCountry('{{ country.title }}', '{{country.code}}', '{{country.id}}')">
                         <img src="{{ 'https://hatscripts.github.io/circle-flags/flags/'+ country.code|lower +'.svg' }}" alt="{{ country.title }}" class="inline-block w-5 h-5 mr-2"
                         onerror="this.onerror=null;this.src='https://hatscripts.github.io/circle-flags/flags/ca.svg';">
-                        {{ country.title }}
+                        {{country.id }} {{ country.title }} 
                     </li>
                     {% endfor %}
                 </ul>
@@ -47,7 +47,7 @@
                     <li class="service-item px-4 py-2 hover:bg-gray-100 cursor-pointer" onclick="selectService('{{ service.title }}', '{{service.code}}', '{{service.id}}')">
                         <img src="{{ 'https://imagedelivery.net/cg2aWO7l_BnFQQ6dZHYOSA/services/' + service.code|lower + '.png/thumb' }}" alt="{{ service.title }}" class="inline-block w-5 h-5 mr-2"
                         onerror="this.onerror=null;this.src='https://imagedelivery.net/cg2aWO7l_BnFQQ6dZHYOSA/services/wb.png/thumb';">
-                        {{ service.title }}
+                        {{ service.id }} {{ service.title }}
                     </li>
                     {% endfor %}
                 </ul>
@@ -62,7 +62,7 @@
                 <span id="number-available" class="font-bold">0</span>
             </div>            
             <div class="flex flex-col">
-                <span class="text-gray-700">Amount</span>
+                <span class="text-gray-700">Amount(₦)</span>
                 <span id="amount" class="font-bold">0</span>
             </div>
         </div>
@@ -136,6 +136,12 @@
 var country_id;
 var application_id;
 var number_cost;
+var converter;
+
+document.addEventListener('DOMContentLoaded', async function() {
+    converter = await convert();
+    console.log("converter is ", converter)
+});
 
 function toggleCountryDropdown() 
 {
@@ -202,6 +208,7 @@ document.addEventListener('click', function(event)
 
 // get prices
 
+
 function getPrices()
 {
     const numberAvailable = document.getElementById('number-available');
@@ -220,8 +227,10 @@ function getPrices()
           .then(response => response.json())
           .then(data => {
             numberAvailable.innerText = data.data.count;
-            amount.innerText = data.data.cost;
-            number_cost = data.data.cost;
+            converted = converter * data.data.cost;
+            console.log("converter in func is ", converter)
+            number_cost = Math.ceil(converted + 1000);
+            amount.innerText = number_cost;
             console.log(data);
             hideSpinner();
           })
@@ -343,6 +352,19 @@ function filterCountries() {
         } else {
             li[i].style.display = "none";
         }
+    }
+}
+
+async function convert() {
+    try {
+        const response = await fetch(`https://api.getgeoapi.com/v2/currency/convert?api_key=6f92eb293685e0dbbbe1faf8540481a89037cf37&from=RUB&to=NGN&amount=1&format=json`);
+        const data = await response.json();
+        const converter = parseFloat(data.rates.NGN.rate_for_amount);
+        // Proceed with the next line of code using `converter`
+        console.log('Converted Amount:', converter);
+        return converter; // Return the converter value if needed
+    } catch (error) {
+        console.error('Error fetching conversion rate:', error);
     }
 }
 

@@ -14,8 +14,6 @@ load_dotenv()
 
 app = Flask(__name__, template_folder='./templates/', static_folder='./static/')
 
-#app.config.from_object('config')
-
 basedir = os.path.abspath(os.path.dirname(__file__))
 
 app.config['SECRET_KEY']=os.getenv('SECRET_KEY')
@@ -102,6 +100,15 @@ def deposit():
     account = get_wallet(current_user.id)
     account = account.get_json()
     return render_template('deposit.html', account=account)
+
+
+@app.errorhandler(404)
+def not_found_error(error):
+    return render_template('errors/404.html'), 404
+
+@app.errorhandler(500)
+def server_error(error):
+    return render_template('errors/500.html'), 500
 
 
 # run the app

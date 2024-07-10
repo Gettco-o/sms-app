@@ -78,7 +78,6 @@ def get_wallet(account_reference):
     ensure_valid_token()
     response = session.get(f'{base_url}/api/v2/bank-transfer/reserved-accounts/{account_reference}', headers=api_headers, timeout=10)
     res = response.json()
-    print(res)
     data = res['responseBody']['accounts']
     return jsonify(data)
 
@@ -86,7 +85,6 @@ def get_balance(account_reference):
     ensure_valid_token()
     response = session.get(f'{base_url}/api/v2/bank-transfer/reserved-accounts/{account_reference}', headers=api_headers, timeout=10)
     res = response.json()
-    print(res)
     try:
         data = res['responseBody']['totalAmount']
         return jsonify(data)
@@ -95,31 +93,28 @@ def get_balance(account_reference):
 
 @monnify.route('/webhook', methods=['POST'])
 def webhook():
-    print("launched")
     ensure_valid_token()
 
     monnify_signature = request.headers.get('monnify-signature')
     if not monnify_signature:
         return jsonify({"status": "error", "message": "Missing monnify-signature header"}), 400
 
-    # Get the raw request body
     request_body = request.get_data(as_text=True)
 
-    # Compute the hash
     computed_hash = hmac.new(
         secret_key.encode(), 
         request_body.encode(), 
         hashlib.sha512
     ).hexdigest()
 
-    # Compare the computed hash with the 'monnify-signature'
+
     if computed_hash != monnify_signature:
         return jsonify({"status": "error", "message": "Invalid signature"}), 400
 
-    #data = request.get_json()
+
     data = request.json
     if data['eventType'] == 'SUCCESSFUL_TRANSACTION':
-        #account_reference = data['eventData']['accountReference']
+
         user_email = data['eventData']['customer']['email']
         created_at = data['eventData']['paidOn']   
         amount_paid = Decimal(data['eventData']['amountPaid'])
@@ -147,12 +142,9 @@ def webhook():
     
     return jsonify({"status": "success"}), 200
 
-#@monnify.route('/purchase', methods=['POST'])
+
 @login_required
 def purchase(email, purchase_amount):
-    #data = request.json
-    #user_email = data['email']
-    #purchase_amount = Decimal(data['purchase_amount'])
 
     user_email = email
     purchase_amount = Decimal(purchase_amount)
@@ -162,8 +154,8 @@ def purchase(email, purchase_amount):
         return jsonify({"status": "error", "message": "Insufficient funds"})
 
     wallet.balance -= purchase_amount
-    #transaction = Transaction(user_email=user_email, amount=purchase_amount, transaction_type='purchase')
-    #db.session.add(transaction)
+
+
     db.session.commit()
 
     return jsonify({"status": "success", "remaining_balance": wallet.balance})
