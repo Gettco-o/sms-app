@@ -2,6 +2,10 @@
 
 {% block head %}
     {{ super() }}
+    <!-- 
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/lazysizes/5.3.2/lazysizes.min.js" integrity="sha512-wc5Cql7TFXTklxd/WeV9wo1ddOOcDLm5OhCxKlYOx7H9gP3YrSvMLx2RIj4U3OGe0p7kZdXUVKlRC3VRooi
+
+     -->
 {% endblock %} 
 
 {% block content %}
@@ -45,8 +49,8 @@
                     </li>        
                     {% for service in services %}
                     <li class="service-item px-4 py-2 hover:bg-gray-100 cursor-pointer" onclick="selectService('{{ service.title }}', '{{service.code}}', '{{service.id}}')">
-                        <img src="{{ 'https://imagedelivery.net/cg2aWO7l_BnFQQ6dZHYOSA/services/' + service.code|lower + '.png/thumb' }}" alt="{{ service.title }}" class="inline-block w-5 h-5 mr-2"
-                        onerror="this.onerror=null;this.src='https://imagedelivery.net/cg2aWO7l_BnFQQ6dZHYOSA/services/wb.png/thumb';">
+                        <!-- <img src="{{ 'https://imagedelivery.net/cg2aWO7l_BnFQQ6dZHYOSA/services/' + service.code|lower + '.png/thumb' }}" alt="{{ service.title }}" class="inline-block w-5 h-5 mr-2"
+                        onerror="this.onerror=null;this.src='https://imagedelivery.net/cg2aWO7l_BnFQQ6dZHYOSA/services/wb.png/thumb';"> -->
                         {{ service.id }} {{ service.title }}
                     </li>
                     {% endfor %}
@@ -87,7 +91,7 @@
                         <th class="py-3 px-6 text-left">Request ID</th>
                         <th class="py-3 px-6 text-left">Country ID</th>
                         <th class="py-3 px-6 text-left">Application ID</th>
-                        <th class="py-3 px-6 text-left">Amount</th>
+                        <th class="py-3 px-6 text-left">Amount(₦)</th>
                         <th class="py-3 px-6 text-left">Number</th>
                         <th class="py-3 px-6 text-left">SMS Code</th>
                         <th class="py-3 px-6 text-left">Date</th>
@@ -101,7 +105,7 @@
                         <td class="py-3 px-6 text-left">{{ms.country_id}}</td>
                         <td class="py-3 px-6 text-left">{{ms.application_id}}</td>
                         <td class="py-3 px-6 text-left">{{ms.amount}}</td>
-                        <td class="py-3 px-6 text-left">{{ms.number}}</td>
+                        <td class="py-3 px-6 text-left">+{{ms.number}}</td>
                         {% if ms.sms_code %}
                         <td id="{{ms.request_id}}" class="py-3 px-6 text-left">{{ms.sms_code}}</td>
                         {% else %}
@@ -113,14 +117,6 @@
                     </tr>
                     {% endfor %}
                     {% endif %}
-                    <tr class="border-b border-gray-200 hover:bg-gray-100">
-                        <td class="py-3 px-6 text-left">2</td>
-                        <td class="py-3 px-6 text-left">UK</td>
-                        <td class="py-3 px-6 text-left">App456</td>
-                        <td class="py-3 px-6 text-left">0987654321</td>
-                        <td class="py-3 px-6 text-left">Code2</td>
-                        <td class="py-3 px-6 text-left">2023-07-05</td>
-                    </tr>
                 <!-- Add more rows as needed -->
                 </tbody>
             </table>
@@ -132,7 +128,6 @@
 </div>
 <script>
     //receive sms
-
 var country_id;
 var application_id;
 var number_cost;
@@ -256,10 +251,16 @@ function purchase_number() {
         .then(response => response.json())
         .then(data => {
             console.log(data);
-            alert(`Number successfully purchased ${data.data.number}`);
-            hideSpinnerPur();
-            document.getElementById('purchase-btn').disabled = false;
-            window.location.reload();
+            if (data.success) {
+                alert(`Number successfully purchased ${data.data.number}`);
+                hideSpinnerPur();
+                document.getElementById('purchase-btn').disabled = false;
+                window.location.reload();
+            }
+            else {
+                alert(data.data.message);
+            }
+            
 
         })
         

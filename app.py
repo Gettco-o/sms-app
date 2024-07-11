@@ -1,5 +1,5 @@
 from flask import Flask, render_template
-from models import db, User, Wallet, Sms
+from models import Transaction, db, User, Wallet, Sms
 from flask_migrate import Migrate
 from flask_login import LoginManager
 from flask_login import login_required, current_user
@@ -76,7 +76,8 @@ def dashboard():
     wallet = Wallet.query.filter_by(user_email=current_user.email).first()
     balance = wallet.balance if wallet else 0
     balance = "{:,}".format(balance)
-    return render_template('dashboard.html', user = current_user, balance=balance)
+    transaction = Transaction.query.filter_by(user_email=current_user.email).all()
+    return render_template('dashboard.html', user = current_user, balance=balance, transaction=transaction)
 
 @app.route("/profile")
 @login_required
